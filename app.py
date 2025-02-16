@@ -135,6 +135,7 @@ def oauth2callback():
     """
     state = session.get('state')
     redirect_uri = get_redirect_uri()  # Get the dynamic redirect URI
+    print(redirect_uri)
     flow = Flow.from_client_secrets_file(
         'credentials.json',
         scopes=SCOPES,
