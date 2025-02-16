@@ -1,23 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Result - Calendar GPT App</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <title>Calendar GPT Web App - Result</title>
 </head>
 <body>
-  <h1>Calendar GPT App - Result</h1>
-  <h3>Combined Input:</h3>
-  <pre>{{ combined_input }}</pre>
-  
-  <h3>Generated Python Code:</h3>
-  <pre>{{ generated_code }}</pre>
-  
-  <h3>Execution Output:</h3>
-  <pre>{{ execution_output }}</pre>
-
-  <a href="{{ url_for('index') }}">Back to Home</a>
+    <h1>Result</h1>
+    <h2>Combined Input</h2>
+    <p>{{ combined_input }}</p>
+    <h2>Generated Code</h2>
+    <pre>{{ generated_code }}</pre>
+    <h2>Execution Output</h2>
+    <pre>{{ execution_output }}</pre>
+    <a href="/">Return Home</a>
 </body>
 </html>

@@ -1,25 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calendar GPT App</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <title>Calendar GPT Web App</title>
 </head>
 <body>
-  <h1>Calendar GPT App</h1>
-  <form action="{{ url_for('process') }}" method="post" enctype="multipart/form-data">
-    <label for="text_input">Enter your combined calendar prompt:</label>
-    <textarea name="text_input" id="text_input" rows="6" placeholder="Enter your combined text here..." required></textarea>
-
-    <label for="file_upload">Optionally upload an image, PDF, or DOCX file for OCR:</label>
-    <input type="file" name="file_upload" id="file_upload" />
-
-    <label for="selected_pages">Optional: Enter page numbers to process (comma separated, max 2):</label>
-    <input type="text" name="selected_pages" id="selected_pages" placeholder="e.g., 1,2" />
-
-    <button type="submit">Submit</button>
-  </form>
+    <h1>Calendar GPT Web App</h1>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% if not session.credentials %}
+      <p>Please <a href="{{ url_for('authorize') }}">authenticate with Google</a> to continue.</p>
+    {% else %}
+      <form action="/process" method="POST" enctype="multipart/form-data">
+          <textarea name="text_input" placeholder="Enter event details..." rows="5" cols="40"></textarea><br>
+          <input type="file" name="file_upload"><br>
+          <input type="text" name="selected_pages" placeholder="Pages (comma separated)"><br>
+          <button type="submit">Submit</button>
+      </form>
+    {% endif %}
 </body>
 </html>
