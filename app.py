@@ -20,6 +20,12 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # External dependencies
+from openai import OpenAI
+from pvrecorder import PvRecorder
+from playsound import playsound
+from IPython.display import Image, display
+
+# Google OAuth and Calendar imports
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
