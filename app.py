@@ -117,7 +117,7 @@ def oauth2callback():
         'credentials.json',
         scopes=SCOPES,
         state=state,
-        redirect_uri=url_for('oauth2callback', _external=True)
+        flow.redirect_uri = url_for('authorize', _external=True)
     )
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
