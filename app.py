@@ -20,12 +20,6 @@ load_dotenv()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # External dependencies
-from openai import OpenAI
-from pvrecorder import PvRecorder
-from playsound import playsound
-from IPython.display import Image, display
-
-# Google OAuth and Calendar imports
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -56,15 +50,29 @@ SCOPES = ['https://www.googleapis.com/auth/calendar']
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Create credentials.json file programmatically if not present.
-# (For local development only; on Heroku you will upload your downloaded credentials.json)
+def get_redirect_uri():
+    """
+    Dynamically determines the correct redirect URI based on the environment.
+    """
+    if 'DYNO' in os.environ:  # Heroku environment
+        app_name = os.environ.get("HEROKU_APP_NAME")  # Heroku app name (set in Heroku config vars)
+        if not app_name:
+            raise Exception("HEROKU_APP_NAME environment variable is not set!")
+        return f"https://{app_name}.herokuapp.com/oauth2callback"
+    else:  # Local development
+        return url_for('oauth2callback', _external=True)
+
 def create_credentials_file():
+    """
+    Creates credentials.json if it doesn't exist. Uses the correct redirect URI based on the environment.
+    """
     if not os.path.exists('credentials.json'):
         google_client_id = os.environ.get("GOOGLE_CLIENT_ID")
         google_client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
         google_project_id = os.environ.get("GOOGLE_PROJECT_ID", "your_project_id")
         if not google_client_id or not google_client_secret:
             raise Exception("Google client ID and/or client secret not set in environment variables!")
+
         credentials_data = {
             "web": {
                 "client_id": google_client_id,
@@ -74,7 +82,7 @@ def create_credentials_file():
                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
                 "client_secret": google_client_secret,
                 "redirect_uris": [
-                    url_for('oauth2callback', _external=True)
+                    get_redirect_uri()  # Use the dynamic redirect URI
                 ]
             }
         }
@@ -98,10 +106,14 @@ def credentials_to_dict(creds):
 
 @app.route('/authorize')
 def authorize():
+    """
+    Initiates the Google OAuth flow using the appropriate redirect URI.
+    """
+    redirect_uri = get_redirect_uri()  # Get the dynamic redirect URI
     flow = Flow.from_client_secrets_file(
         'credentials.json',
         scopes=SCOPES,
-        redirect_uri=url_for('oauth2callback', _external=True)
+        redirect_uri=redirect_uri
     )
     authorization_url, state = flow.authorization_url(
         access_type='offline',
@@ -112,23 +124,32 @@ def authorize():
 
 @app.route('/oauth2callback')
 def oauth2callback():
+    """
+    Handles the OAuth2 callback and fetches the access token.
+    """
     state = session.get('state')
+    redirect_uri = get_redirect_uri()  # Get the dynamic redirect URI
     flow = Flow.from_client_secrets_file(
         'credentials.json',
         scopes=SCOPES,
         state=state,
-        redirect_uri=url_for('oauth2callback', _external=True)
+        redirect_uri=redirect_uri
     )
     flow.fetch_token(authorization_response=request.url)
     creds = flow.credentials
     session['credentials'] = credentials_to_dict(creds)
+
     # Optionally, write to token.json (note: Heroku’s filesystem is ephemeral)
     with open('token.json', 'w') as token_file:
         token_file.write(creds.to_json())
+
     flash("Google Calendar authenticated successfully.")
     return redirect(url_for('index'))
 
 def get_credentials():
+    """
+    Retrieves the stored credentials or generates new ones.
+    """
     if 'credentials' in session:
         creds = Credentials(**session['credentials'])
     elif os.path.exists('token.json'):
