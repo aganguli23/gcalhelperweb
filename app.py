@@ -61,12 +61,16 @@ def get_redirect_uri():
     Dynamically determines the correct redirect URI based on the environment.
     """
     if 'DYNO' in os.environ:  # Heroku environment
-        app_name = os.environ.get("HEROKU_APP_NAME")  # Heroku app name (set in Heroku config vars)
+        app_name = os.environ.get("HEROKU_APP_NAME")
         if not app_name:
             raise Exception("HEROKU_APP_NAME environment variable is not set!")
-        return f"https://{app_name}.herokuapp.com/oauth2callback"
+        redirect_uri = f"https://{app_name}.herokuapp.com/oauth2callback"
+        print(f"Using Heroku redirect URI: {redirect_uri}")
+        return redirect_uri
     else:  # Local development
-        return url_for('oauth2callback', _external=True)
+        redirect_uri = "http://127.0.0.1:5000/oauth2callback"
+        print(f"Using local redirect URI: {redirect_uri}")
+        return redirect_uri
 
 def create_credentials_file():
     """
