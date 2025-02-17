@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 # Credentials and tokens
-#credentials.json
+credentials.json
 token.json
 
 # Environment files
