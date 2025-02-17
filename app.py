@@ -352,8 +352,72 @@ def process():
         os.remove(file_path)
     combined_input = combine_inputs(user_input, ocr_text)
     print("Combined Input:", combined_input)
-    prompt = f"""
+    prompt1 = f"""
 Generate a Python script to add all the calendar event(s) (that you identify in this user input text)
+to Google Calendar: {combined_input}.
+Carefully meet all the criteria and follow all the directions below:
+All API setup has been completed and authentication is managed via OAuth2 using the "web" client credentials defined in credentials.json.
+Ensure that the script utilizes the Google OAuth2 web flow for user authentication and stores tokens appropriately.
+Do not use service account credentials, as those require fields (such as client_email and token_uri) which are not present in credentials.json.
+Use the Google Calendar API and include proper timezone handling by
+    1. Setting the Time in Local Timezone: The start_time is now set in the local timezone (local_tz) instead of UTC: start_time = datetime.combine(next_wednesday, datetime.min.time(), tzinfo=local_tz)
+    2. Avoiding Unnecessary UTC Conversion: By setting the time directly in the local timezone, you avoid the need to convert from UTC to local time later.
+    3. Ensuring Correct Time in Google Calendar: The create_calendar_event function already sends the local time and timezone to Google Calendar:
+    'dateTime': start_local.isoformat(),
+    'timeZone': str(local_tz)
+    This ensures that the event is created at the correct time in your local timezone.
+
+Ensure the year and month are correct. If not provided, extract from:
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+and convert to local time.
+Ensure that event titles are human yet professional--short, concise, and descriptive.
+Unless otherwise specified, include reminders at 10 minutes, 1 hour, and 1 day before as notifications.
+Only include a Google Meet link if it is explicitly required (must say something like "google meet call" and not include mention of another meeting link. if it says something more vague like "conference call", has another meeting link provided, or generally mentions the existence of another meeting link, it means you should definitely not include a google meet link with the event)
+In the event that a google meet link is explicitly required based on the ciriteria i detailed above, include conferenceData with a createRequest (using a unique requestId and conferenceSolutionKey set as 'hangoutsMeet'), and when calling events.insert or events.update include conferenceDataVersion=1.
+After event creation, use Python's webbrowser module to open the event link in the default browser.
+At the end, include a summary of how many events were created along with additional details.
+
+When writing your script, try not to use the zoneinfo.ZoneInfo object at all
+
+IMPORTANT: Only use the following external dependencies when generating the code. Do not include any libraries or modules outside this list (aside from Python's standard library):
+
+Flask>=2.0.0  
+gunicorn  
+google-auth-oauthlib>=0.4.6  
+google-api-python-client>=2.70.0  
+google-auth>=2.3.3  
+Pillow>=9.0.0  
+pytesseract>=0.3.10  
+openai  
+pvrecorder  
+playsound==1.2.2  
+IPython  
+pytz  
+tzlocal  
+pdf2image  
+docx2pdf  
+python-dotenv  
+requests>=2.25.0  
+httplib2>=0.20.0  
+uritemplate>=3.0.1  
+oauthlib>=3.1.0  
+six>=1.15.0  
+Jinja2>=3.0.0  
+MarkupSafe>=2.0.0  
+itsdangerous>=2.0.0  
+click>=8.0.0
+
+SYSTEM DEPENDENCIES (use Homebrew on macOS):
+- Tesseract OCR (for pytesseract) → `brew install tesseract`
+- Poppler (for pdf2image) → `brew install poppler`
+- LibreOffice (for docx2pdf, if Microsoft Word is not available) → `brew install --cask libreoffice`
+
+Do not include code that requires dependencies outside of these.
+"""
+    
+    prompt2 = f"""
+Generate a Python script to reove all the calendar event(s) (that are classified in this user input text)
 to Google Calendar: {combined_input}.
 Carefully meet all the criteria and follow all the directions below:
 All API setup has been completed and authentication is managed via OAuth2 using the "web" client credentials defined in credentials.json.
@@ -412,6 +476,10 @@ SYSTEM DEPENDENCIES (use Homebrew on macOS):
 
 Do not include code that requires dependencies outside of these.
 """
+    
+    prompt = prompt1
+    
+    
     # Clear context files if they exist
     for file_name in ['gpt4oContext1.json', 'gpt4oMiniContext1.json']:
         if os.path.exists(file_name):
